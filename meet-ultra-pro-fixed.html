@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meet Ultra Pro - نظام الاجتماعات الاحترافي المتقدم</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          },
+          animation: {
+            'pulse-glow': 'pulseGlow 2s infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'wave': 'wave 1.5s ease-in-out infinite',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)' },
+              '50%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.8)' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- PeerJS WebRTC Library -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glass-light {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .dark .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .light .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.5); }
+
+    /* إشعارات (توست) غير مزعجة بدل alert() */
+    #toastContainer {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #e2e8f0;
+      padding: 0.6rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      animation: toastIn 0.25s ease-out, toastOut 0.25s ease-in 2.5s forwards;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between overflow-x-hidden transition-colors duration-300">
+
+  <div id="toastContainer"></div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. الشاشة الرئيسية والانتظار (HOME & LOBBY SCREEN)                      -->
+  <!-- ========================================================================= -->
+  <div id="homeSection" class="flex-1 flex flex-col justify-between relative z-10">
+
+    <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+      <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+    </div>
+
+    <header class="h-20 px-8 flex items-center justify-between glass border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-video text-lg"></i>
+        </div>
+        <div>
+          <span class="font-black text-xl tracking-wide bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">MEET ULTRA</span>
+          <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-md border border-indigo-500/30 mr-2">Pro Edition</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div id="networkStatusBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          <span id="pingText">الشبكة ممتازة (18ms)</span>
+        </div>
+
+        <button id="themeToggleHome" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-slate-800 transition">
+          <i class="fa-solid fa-moon text-indigo-400 dark:hidden"></i>
+          <i class="fa-solid fa-sun text-amber-400 hidden dark:inline"></i>
+        </button>
+
+        <button id="openSettingsHome" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-slate-800 transition">
+          <i class="fa-solid fa-sliders text-slate-300"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto w-full px-6 py-8 flex-1 flex flex-col lg:flex-row items-center gap-12 justify-center">
+
+      <div class="flex-1 space-y-6 text-center lg:text-right">
+        <div class="space-y-3">
+          <h1 class="text-4xl lg:text-6xl font-black leading-tight tracking-tight">
+            اجتماعات آمنة،<br>
+            <span class="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">فائقة الدقة وذكية</span>
+          </h1>
+          <p class="text-slate-400 text-base lg:text-lg max-w-xl">
+            نظام محادثات الفيديو الحي الجيل الجديد. دعم السبورة التفاعلية، تغبيش الخلفية، التسجيل المباشر، والتصويت الحي.
+          </p>
+        </div>
+
+        <div class="p-2 glass rounded-2xl border border-slate-800 shadow-2xl space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="createBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-600/30 transition duration-300 flex items-center justify-center gap-2 group">
+              <i class="fa-solid fa-plus-circle group-hover:scale-110 transition-transform"></i>
+              <span>إنشاء اجتماع جديد</span>
+            </button>
+
+            <button id="scheduleMeetingBtn" class="w-full bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-bold py-4 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-calendar-check text-indigo-400"></i>
+              <span>جدولة اجتماع مستقبلي</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3 px-2">
+            <div class="flex-1 h-px bg-slate-800"></div>
+            <span class="text-xs font-semibold text-slate-500 uppercase">أو انضمام عبر كود</span>
+            <div class="flex-1 h-px bg-slate-800"></div>
+          </div>
+
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-keyboard absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+              <input id="roomInput" type="text" placeholder="أدخل كود الغرفة هنا..." class="w-full bg-slate-900/90 border border-slate-800 pr-11 pl-4 py-3.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition font-mono">
+            </div>
+            <button id="joinBtn" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-6 py-3.5 rounded-xl font-bold transition duration-300">
+              انضمام
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2 text-xs text-slate-400">
+          <div class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-emerald-400"></i> تشفير كامل E2EE</div>
+          <div class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-400"></i> بدون تسجيل حساب</div>
+          <div class="flex items-center gap-1.5"><i class="fa-solid fa-infinity text-indigo-400"></i> بدون حد زمني</div>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-[460px]">
+        <div class="glass-panel p-5 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider"><i class="fa-solid fa-camera mr-1 text-indigo-400"></i> معاينة الكاميرا والجاهزية</span>
+            <span id="readyBadge" class="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">جاهز للاتصال</span>
+          </div>
+
+          <div class="relative w-full h-64 bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-inner flex items-center justify-center group">
+            <video id="previewVideo" autoplay playsinline muted class="w-full h-full object-cover transition-transform duration-500"></video>
+
+            <div id="previewPlaceholder" class="hidden flex-col items-center justify-center gap-2 absolute inset-0 bg-slate-900">
+              <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-2xl font-bold text-indigo-400">
+                <i class="fa-solid fa-user-slash"></i>
+              </div>
+              <span class="text-xs text-slate-500">الكاميرا متوقفة</span>
+            </div>
+
+            <div class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
+              <i class="fa-solid fa-microphone text-xs text-indigo-400"></i>
+              <div class="flex items-end gap-0.5 h-3">
+                <div id="vu1" class="w-1 bg-slate-700 h-1 rounded-full transition-all"></div>
+                <div id="vu2" class="w-1 bg-slate-700 h-2 rounded-full transition-all"></div>
+                <div id="vu3" class="w-1 bg-slate-700 h-3 rounded-full transition-all"></div>
+                <div id="vu4" class="w-1 bg-slate-700 h-2 rounded-full transition-all"></div>
+              </div>
+            </div>
+
+            <div class="absolute bottom-3 right-3 flex items-center gap-2">
+              <button id="preMicBtn" class="w-9 h-9 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 flex items-center justify-center backdrop-blur-md transition">
+                <i id="preMicIcon" class="fa-solid fa-microphone text-xs"></i>
+              </button>
+              <button id="preCamBtn" class="w-9 h-9 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 flex items-center justify-center backdrop-blur-md transition">
+                <i id="preCamIcon" class="fa-solid fa-video text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-400">اسم العرض قبل الانضمام:</label>
+            <input id="lobbyUsername" type="text" value="مشارك جديد" class="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="h-12 border-t border-slate-800/60 px-8 flex items-center justify-between text-xs text-slate-500">
+      <span>تطبيق Meet Ultra &copy; 2026 - نظام محادثات فيديو من الجيل الجديد</span>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-slate-300">الخصوصية</a>
+        <a href="#" class="hover:text-slate-300">الدعم الفني</a>
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 2. واجهة غرفة الاجتماع الرئيسية (ACTIVE MEETING SCREEN)                 -->
+  <!-- ========================================================================= -->
+  <div id="meetingSection" class="hidden flex-1 flex-col h-screen overflow-hidden relative z-20">
+
+    <header class="h-16 bg-slate-900/90 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-md z-30">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="meetingTitleText" class="font-bold text-sm tracking-wide">اجتماع مباشر</span>
+        </div>
+
+        <div class="h-4 w-px bg-slate-800"></div>
+
+        <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700">
+          <span class="text-xs text-slate-400">الكود:</span>
+          <strong id="displayRoomId" class="text-xs font-mono text-indigo-400 tracking-wider">------</strong>
+          <button id="copyBtn" title="نسخ رابط الغرفة" class="text-slate-400 hover:text-white mr-1 text-xs">
+            <i class="fa-solid fa-copy"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+
+        <div id="recordingBadge" class="hidden items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-full text-xs font-bold animate-pulse">
+          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+          <span>جاري التسجيل...</span>
+        </div>
+
+        <button id="layoutToggleBtn" title="تغيير طريقة العرض" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
+          <i class="fa-solid fa-table-cells-large"></i>
+        </button>
+
+        <button id="hostAdminBtn" class="hidden bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold items-center gap-1.5 hover:bg-amber-500/20 transition">
+          <i class="fa-solid fa-crown"></i>
+          <span>لوحة المشرف</span>
+        </button>
+
+        <button id="themeToggleMeeting" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
+          <i class="fa-solid fa-moon dark:hidden"></i>
+          <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 flex relative overflow-hidden bg-slate-950">
+
+      <main id="videoGrid" class="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-center justify-center overflow-y-auto transition-all duration-300 auto-rows-fr">
+
+        <div id="localVideoContainer" class="relative w-full h-[320px] lg:h-[380px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group transition-all">
+          <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+          <canvas id="blurCanvas" class="hidden absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
+
+          <div class="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-slate-800">
+            <span id="localUserNameTag">أنت (المستضيف)</span>
+            <i id="localMicStatusIcon" class="fa-solid fa-microphone text-emerald-400 text-[10px]"></i>
+          </div>
+
+          <div id="localHandBadge" class="hidden absolute top-3 right-3 bg-amber-500 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-xs shadow-lg animate-bounce">
+            ✋ مرفوع اليد
+          </div>
+        </div>
+
+      </main>
+
+      <div id="emojiOverlay" class="absolute inset-x-0 bottom-24 pointer-events-none flex justify-center gap-6 z-40"></div>
+
+      <aside id="sidebar" class="hidden w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex-col z-30 transition-all shadow-2xl">
+
+        <div class="h-14 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-950/50">
+          <div class="flex gap-1">
+            <button id="tabChatBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">المحادثة</button>
+            <button id="tabUsersBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800">المشاركون (<span id="userCount">1</span>)</button>
+            <button id="tabPollsBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800">التصويت</button>
+          </div>
+          <button id="closeSidebar" class="text-slate-400 hover:text-white p-1">✕</button>
+        </div>
+
+        <div id="chatTabBody" class="flex-1 flex flex-col justify-between p-4 overflow-hidden">
+          <div id="chatMessages" class="space-y-3 overflow-y-auto flex-1 pr-1"></div>
+
+          <form id="chatForm" class="mt-3 flex gap-2">
+            <input id="chatInput" type="text" placeholder="اكتب رسالة للمجموعة..." class="flex-1 bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+
+        <div id="usersTabBody" class="hidden flex-1 p-4 overflow-y-auto space-y-3">
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">الأعضاء المتواجدون</div>
+          <div id="participantsList" class="space-y-2"></div>
+        </div>
+
+        <div id="pollsTabBody" class="hidden flex-1 p-4 overflow-y-auto space-y-4">
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">إنشاء استبيان سريع</div>
+          <div class="space-y-2">
+            <input id="pollQuestionInput" type="text" placeholder="السؤال..." class="w-full bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">
+            <input id="pollOpt1Input" type="text" placeholder="الخيار الأول" class="w-full bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">
+            <input id="pollOpt2Input" type="text" placeholder="الخيار الثاني" class="w-full bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">
+            <button id="launchPollBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-xl text-xs font-bold text-white">إطلاق التصويت</button>
+          </div>
+
+          <div id="activePollContainer" class="hidden border-t border-slate-800 pt-4 space-y-3">
+            <div id="activePollQuestion" class="font-bold text-sm"></div>
+            <div id="pollOptionsList" class="space-y-2"></div>
+          </div>
+        </div>
+
+      </aside>
+
+      <div id="whiteboardPanel" class="hidden absolute inset-4 bg-slate-900/95 border border-slate-800 rounded-3xl z-40 backdrop-blur-2xl p-4 flex-col shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-pen-ruler text-indigo-400"></i>
+            <span class="font-bold text-sm">السبورة التفاعلية الحية</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input id="wbColor" type="color" value="#6366f1" class="w-7 h-7 bg-transparent rounded cursor-pointer">
+            <input id="wbSize" type="range" min="1" max="20" value="3" class="w-20">
+            <button id="wbClearBtn" class="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold">مسح الكل</button>
+            <button id="closeWhiteboardBtn" class="text-slate-400 hover:text-white text-lg">✕</button>
+          </div>
+        </div>
+
+        <div class="flex-1 bg-slate-950 rounded-2xl overflow-hidden relative">
+          <canvas id="whiteboardCanvas" class="w-full h-full cursor-crosshair"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="h-20 bg-slate-900/95 border-t border-slate-800 px-6 flex items-center justify-between backdrop-blur-md z-30">
+
+      <div class="text-xs font-mono text-slate-400 hidden sm:block">
+        <span id="meetingTimer">00:00:00</span>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+
+        <button id="micBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition">
+          <i id="micIcon" class="fa-solid fa-microphone text-base"></i>
+        </button>
+
+        <button id="camBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition">
+          <i id="camIcon" class="fa-solid fa-video text-base"></i>
+        </button>
+
+        <button id="blurToggleBtn" title="تغبيش الخلفية" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+          <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+        </button>
+
+        <button id="screenShareBtn" title="مشاركة الشاشة" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+          <i class="fa-solid fa-desktop text-base"></i>
+        </button>
+
+        <button id="whiteboardToggleBtn" title="السبورة التفاعلية" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-indigo-400 flex items-center justify-center transition">
+          <i class="fa-solid fa-pen-ruler text-base"></i>
+        </button>
+
+        <button id="raiseHandBtn" title="رفع اليد" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-400 flex items-center justify-center transition">
+          <i class="fa-solid fa-hand text-base"></i>
+        </button>
+
+        <button id="recordMeetingBtn" title="تسجيل الاجتماع" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-red-400 flex items-center justify-center transition">
+          <i class="fa-solid fa-circle-dot text-base"></i>
+        </button>
+
+        <div class="relative">
+          <button id="emojiBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 flex items-center justify-center transition">
+            <i class="fa-solid fa-face-smile text-base"></i>
+          </button>
+
+          <div id="emojiPicker" class="hidden absolute bottom-16 right-0 bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-2xl flex gap-2 z-50 backdrop-blur-xl">
+            <button type="button" class="emoji-opt text-2xl hover:scale-125 transition">👏</button>
+            <button type="button" class="emoji-opt text-2xl hover:scale-125 transition">👍</button>
+            <button type="button" class="emoji-opt text-2xl hover:scale-125 transition">❤️</button>
+            <button type="button" class="emoji-opt text-2xl hover:scale-125 transition">😂</button>
+            <button type="button" class="emoji-opt text-2xl hover:scale-125 transition">🎉</button>
+          </div>
+        </div>
+
+        <button id="sidebarToggleBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+          <i class="fa-solid fa-comments text-base"></i>
+        </button>
+
+        <button id="leaveBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 h-12 rounded-2xl flex items-center gap-2 transition shadow-lg shadow-red-600/30 ml-2">
+          <i class="fa-solid fa-phone-slash"></i>
+          <span class="hidden md:inline">مغادرة</span>
+        </button>
+      </div>
+
+      <button id="openSettingsMeeting" class="text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-gear text-lg"></i>
+      </button>
+
+    </footer>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 3. نافذة الإعدادات الشاملة (SETTINGS MODAL)                              -->
+  <!-- ========================================================================= -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-base flex items-center gap-2 text-indigo-400">
+          <i class="fa-solid fa-sliders"></i> إعدادات الصوت والكاميرا
+        </h3>
+        <button id="closeSettingsModal" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">اسم العرض</label>
+          <input id="settingsUsername" type="text" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">الميكروفون (مدخل الصوت)</label>
+          <select id="micSelect" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-slate-100 focus:outline-none focus:border-indigo-500"></select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">الكاميرا (الفيديو)</label>
+          <select id="camSelect" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-slate-100 focus:outline-none focus:border-indigo-500"></select>
+        </div>
+      </div>
+
+      <button id="saveSettingsBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">حفظ التغييرات</button>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 4. المحرك البرمجي الرئيسي JavaScript                                     -->
+  <!-- ========================================================================= -->
+  <script>
+    /**
+     * Meet Ultra Pro Engine
+     * WebRTC P2P mesh عبر PeerJS + Canvas APIs + حالة لحظية.
+     */
+
+    const AppState = {
+      peer: null,
+      localStream: null,
+      screenStream: null,
+      roomId: null,
+      userId: null,
+      userName: 'مشارك جديد',
+      isHost: false,
+      isMuted: false,
+      isVideoOff: false,
+      isBlurActive: false,
+      isHandRaised: false,
+      isRecording: false,
+      isScreenSharing: false,
+      mediaRecorder: null,
+      recordedChunks: [],
+      activeConnections: {},
+      mediaCalls: {},
+      participants: {}, // { peerId: { userName } }
+      audioAnalyser: null,
+      lobbyAnimFrameId: null,
+      blurAnimFrameId: null,
+      meetingStartTime: null,
+      timerInterval: null,
+      currentLayout: 'grid'
+    };
+
+    const DOM = {
+      homeSection: document.getElementById('homeSection'),
+      meetingSection: document.getElementById('meetingSection'),
+      settingsModal: document.getElementById('settingsModal'),
+      previewVideo: document.getElementById('previewVideo'),
+      previewPlaceholder: document.getElementById('previewPlaceholder'),
+      localVideo: document.getElementById('localVideo'),
+      videoGrid: document.getElementById('videoGrid'),
+      displayRoomId: document.getElementById('displayRoomId'),
+      chatMessages: document.getElementById('chatMessages'),
+      chatInput: document.getElementById('chatInput'),
+      chatForm: document.getElementById('chatForm'),
+      sidebar: document.getElementById('sidebar'),
+      emojiOverlay: document.getElementById('emojiOverlay'),
+      emojiPicker: document.getElementById('emojiPicker'),
+      whiteboardPanel: document.getElementById('whiteboardPanel'),
+      whiteboardCanvas: document.getElementById('whiteboardCanvas'),
+      blurCanvas: document.getElementById('blurCanvas'),
+      participantsList: document.getElementById('participantsList'),
+      recordingBadge: document.getElementById('recordingBadge'),
+      localHandBadge: document.getElementById('localHandBadge'),
+      hostAdminBtn: document.getElementById('hostAdminBtn'),
+      userCount: document.getElementById('userCount'),
+      toastContainer: document.getElementById('toastContainer'),
+      settingsUsername: document.getElementById('settingsUsername'),
+      lobbyUsername: document.getElementById('lobbyUsername'),
+      roomInput: document.getElementById('roomInput')
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initThemeHandler();
+      setupLobbyPreview();
+      enumerateDevices();
+      bindGlobalEvents();
+      bindLobbyPreJoinControls();
+      bindSettingsModal();
+      bindSidebarTabs();
+      bindPollSystem();
+      bindLayoutToggle();
+      bindScreenShare();
+    });
+
+    // -------------------------------------------------------------------------
+    // أداة إشعارات بديلة عن alert()
+    // -------------------------------------------------------------------------
+    function showToast(message) {
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.textContent = message;
+      DOM.toastContainer.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // -------------------------------------------------------------------------
+    // 1. الثيم وتعداد الأجهزة
+    // -------------------------------------------------------------------------
+    function initThemeHandler() {
+      const toggleTheme = () => document.documentElement.classList.toggle('dark');
+      document.getElementById('themeToggleHome').addEventListener('click', toggleTheme);
+      document.getElementById('themeToggleMeeting').addEventListener('click', toggleTheme);
+    }
+
+    async function enumerateDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const micSelect = document.getElementById('micSelect');
+        const camSelect = document.getElementById('camSelect');
+        micSelect.innerHTML = '';
+        camSelect.innerHTML = '';
+
+        let micCount = 0;
+        let camCount = 0;
+
+        devices.forEach(device => {
+          const option = document.createElement('option');
+          option.value = device.deviceId;
+          if (device.kind === 'audioinput') {
+            micCount++;
+            option.text = device.label || `ميكروفون ${micCount}`;
+            micSelect.appendChild(option);
+          }
+          if (device.kind === 'videoinput') {
+            camCount++;
+            option.text = device.label || `كاميرا ${camCount}`;
+            camSelect.appendChild(option);
+          }
+        });
+      } catch (e) {
+        console.warn("تعذر جلب الأجهزة المتاحة:", e);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. اللوبي والمعاينة والفيوميتر
+    // -------------------------------------------------------------------------
+    async function setupLobbyPreview() {
+      try {
+        AppState.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        DOM.previewVideo.srcObject = AppState.localStream;
+        setupAudioVisualizer(AppState.localStream);
+      } catch (err) {
+        console.error("خطأ في صلاحية الكاميرا:", err);
+        DOM.previewPlaceholder.classList.remove('hidden');
+        DOM.previewPlaceholder.classList.add('flex');
+        showToast("تعذّر الوصول إلى الكاميرا أو الميكروفون، يرجى منح الأذونات اللازمة.");
+      }
+    }
+
+    function setupAudioVisualizer(stream) {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      AppState.audioAnalyser = audioContext.createAnalyser();
+      AppState.audioAnalyser.fftSize = 32;
+      source.connect(AppState.audioAnalyser);
+
+      const dataArray = new Uint8Array(AppState.audioAnalyser.frequencyBinCount);
+      const vuBars = [document.getElementById('vu1'), document.getElementById('vu2'), document.getElementById('vu3'), document.getElementById('vu4')];
+
+      function updateVisualizer() {
+        // إيقاف الحلقة عند مغادرة اللوبي لتفادي تسرّب الذاكرة/المعالجة
+        if (!DOM.homeSection.classList.contains('hidden') && AppState.audioAnalyser) {
+          AppState.audioAnalyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+          vuBars.forEach((bar, idx) => {
+            if (bar) {
+              const h = Math.min(12, Math.max(2, (average / 10) * (idx + 1)));
+              bar.style.height = `${h}px`;
+              bar.style.backgroundColor = average > 15 ? '#6366f1' : '#334155';
+            }
+          });
+        }
+        AppState.lobbyAnimFrameId = requestAnimationFrame(updateVisualizer);
+      }
+      updateVisualizer();
+    }
+
+    // تشغيل/إيقاف الميكروفون والكاميرا من شاشة الانتظار قبل الدخول
+    function bindLobbyPreJoinControls() {
+      document.getElementById('preMicBtn').addEventListener('click', () => {
+        if (!AppState.localStream) return;
+        AppState.isMuted = !AppState.isMuted;
+        const track = AppState.localStream.getAudioTracks()[0];
+        if (track) track.enabled = !AppState.isMuted;
+        document.getElementById('preMicIcon').className = AppState.isMuted
+          ? "fa-solid fa-microphone-slash text-red-500 text-xs"
+          : "fa-solid fa-microphone text-xs";
+        syncMicUI();
+      });
+
+      document.getElementById('preCamBtn').addEventListener('click', () => {
+        if (!AppState.localStream) return;
+        AppState.isVideoOff = !AppState.isVideoOff;
+        const track = AppState.localStream.getVideoTracks()[0];
+        if (track) track.enabled = !AppState.isVideoOff;
+        document.getElementById('preCamIcon').className = AppState.isVideoOff
+          ? "fa-solid fa-video-slash text-red-500 text-xs"
+          : "fa-solid fa-video text-xs";
+        DOM.previewPlaceholder.classList.toggle('flex', AppState.isVideoOff);
+        DOM.previewPlaceholder.classList.toggle('hidden', !AppState.isVideoOff);
+        syncCamUI();
+      });
+    }
+
+    function syncMicUI() {
+      const micIcon = document.getElementById('micIcon');
+      if (micIcon) micIcon.className = AppState.isMuted ? "fa-solid fa-microphone-slash text-red-500 text-base" : "fa-solid fa-microphone text-base";
+      const preMicIcon = document.getElementById('preMicIcon');
+      if (preMicIcon) preMicIcon.className = AppState.isMuted ? "fa-solid fa-microphone-slash text-red-500 text-xs" : "fa-solid fa-microphone text-xs";
+      const localMicStatusIcon = document.getElementById('localMicStatusIcon');
+      if (localMicStatusIcon) localMicStatusIcon.className = AppState.isMuted ? "fa-solid fa-microphone-slash text-red-500 text-[10px]" : "fa-solid fa-microphone text-emerald-400 text-[10px]";
+    }
+
+    function syncCamUI() {
+      const camIcon = document.getElementById('camIcon');
+      if (camIcon) camIcon.className = AppState.isVideoOff ? "fa-solid fa-video-slash text-red-500 text-base" : "fa-solid fa-video text-base";
+      const preCamIcon = document.getElementById('preCamIcon');
+      if (preCamIcon) preCamIcon.className = AppState.isVideoOff ? "fa-solid fa-video-slash text-red-500 text-xs" : "fa-solid fa-video text-xs";
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. محرك اتصال WebRTC
+    // -------------------------------------------------------------------------
+    document.getElementById('createBtn').addEventListener('click', async () => {
+      AppState.isHost = true;
+      AppState.userName = DOM.lobbyUsername.value.trim() || 'المستضيف';
+      AppState.roomId = Math.random().toString(36).substring(2, 8);
+
+      initPeerSession(AppState.roomId);
+    });
+
+    document.getElementById('joinBtn').addEventListener('click', () => {
+      const inputCode = DOM.roomInput.value.trim();
+      if (!inputCode) {
+        showToast("يرجى كتابة كود الغرفة أولاً!");
+        return;
+      }
+
+      AppState.isHost = false;
+      AppState.userName = DOM.lobbyUsername.value.trim() || 'مشارك';
+      AppState.roomId = inputCode;
+
+      initPeerSession(null);
+    });
+
+    function initPeerSession(customId) {
+      AppState.peer = customId ? new Peer(customId) : new Peer();
+
+      AppState.peer.on('open', (id) => {
+        AppState.userId = id;
+
+        if (!customId) {
+          // الاتصال بالمضيف
+          const conn = AppState.peer.connect(AppState.roomId);
+          setupDataConnection(conn);
+
+          const call = AppState.peer.call(AppState.roomId, AppState.localStream);
+          setupMediaCall(call);
+        }
+
+        enterMeetingRoomUI();
+      });
+
+      AppState.peer.on('call', (call) => {
+        call.answer(AppState.localStream);
+        setupMediaCall(call);
+      });
+
+      AppState.peer.on('connection', (conn) => {
+        setupDataConnection(conn);
+      });
+
+      // معالجة أخطاء الاتصال (غرفة غير موجودة، كود محجوز، مشاكل شبكة...)
+      AppState.peer.on('error', (err) => {
+        console.error('خطأ PeerJS:', err);
+        let msg = "حدث خطأ في الاتصال، يرجى المحاولة مجددًا.";
+        if (err.type === 'peer-unavailable') {
+          msg = "لا يمكن العثور على غرفة بهذا الكود، تأكد من الكود وحاول مرة أخرى.";
+        } else if (err.type === 'unavailable-id') {
+          msg = "كود الغرفة مستخدم حاليًا، يرجى المحاولة مجددًا.";
+        } else if (err.type === 'network' || err.type === 'server-error' || err.type === 'disconnected') {
+          msg = "تعذّر الاتصال بالخادم، تحقق من اتصال الإنترنت.";
+        }
+        showToast(msg);
+
+        // إن فشل الانضمام قبل الدخول للاجتماع، أعد المستخدم للوبي
+        if (DOM.meetingSection.classList.contains('hidden')) {
+          AppState.roomId = null;
+        }
+      });
+    }
+
+    function setupMediaCall(call) {
+      AppState.mediaCalls[call.peer] = call;
+
+      call.on('stream', (remoteStream) => {
+        addRemoteStreamTile(call.peer, remoteStream);
+      });
+
+      call.on('close', () => {
+        removeRemoteStreamTile(call.peer);
+      });
+
+      call.on('error', (err) => {
+        console.warn('خطأ في مكالمة الوسائط:', err);
+      });
+    }
+
+    function setupDataConnection(conn) {
+      AppState.activeConnections[conn.peer] = conn;
+
+      conn.on('data', (data) => {
+        handleIncomingDataPacket(data, conn.peer);
+      });
+
+      conn.on('open', () => {
+        conn.send({
+          type: 'user-joined',
+          userName: AppState.userName,
+          userId: AppState.peer.id
+        });
+      });
+
+      conn.on('close', () => {
+        delete AppState.activeConnections[conn.peer];
+        removeRemoteStreamTile(conn.peer);
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. إدارة شبكة الفيديو والمشاركين
+    // -------------------------------------------------------------------------
+    function enterMeetingRoomUI() {
+      DOM.homeSection.classList.add('hidden');
+      DOM.meetingSection.classList.remove('hidden');
+      DOM.meetingSection.classList.add('flex');
+
+      // إيقاف حلقة مؤشر الصوت الخاصة باللوبي بعد الدخول للاجتماع
+      if (AppState.lobbyAnimFrameId) {
+        cancelAnimationFrame(AppState.lobbyAnimFrameId);
+        AppState.lobbyAnimFrameId = null;
+      }
+
+      DOM.localVideo.srcObject = AppState.localStream;
+      DOM.displayRoomId.innerText = AppState.roomId;
+      document.getElementById('localUserNameTag').innerText = AppState.isHost
+        ? `${AppState.userName} (أنت، المستضيف)`
+        : `${AppState.userName} (أنت)`;
+
+      if (AppState.isHost) {
+        DOM.hostAdminBtn.classList.remove('hidden');
+        DOM.hostAdminBtn.classList.add('flex');
+      }
+
+      syncMicUI();
+      syncCamUI();
+      startMeetingTimer();
+      updateParticipantsList();
+    }
+
+    function addRemoteStreamTile(peerId, stream) {
+      if (document.getElementById(`tile-${peerId}`)) return;
+
+      const container = document.createElement('div');
+      container.id = `tile-${peerId}`;
+      container.className = "relative w-full h-[320px] lg:h-[380px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group transition-all";
+
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.className = "w-full h-full object-cover";
+
+      const badge = document.createElement('div');
+      badge.className = "absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-slate-800";
+      const knownName = AppState.participants[peerId] && AppState.participants[peerId].userName;
+      badge.innerHTML = `<span>${knownName || 'مشارك'}</span>`;
+      badge.dataset.nameLabel = 'true';
+
+      container.appendChild(video);
+      container.appendChild(badge);
+      DOM.videoGrid.appendChild(container);
+
+      if (!AppState.participants[peerId]) {
+        AppState.participants[peerId] = { userName: 'مشارك' };
+      }
+      updateParticipantsList();
+    }
+
+    function removeRemoteStreamTile(peerId) {
+      const tile = document.getElementById(`tile-${peerId}`);
+      if (tile) tile.remove();
+
+      if (AppState.mediaCalls[peerId]) {
+        try { AppState.mediaCalls[peerId].close(); } catch (e) {}
+        delete AppState.mediaCalls[peerId];
+      }
+      if (AppState.activeConnections[peerId]) {
+        delete AppState.activeConnections[peerId];
+      }
+      if (AppState.participants[peerId]) {
+        delete AppState.participants[peerId];
+      }
+      updateParticipantsList();
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. الميزات التفاعلية (تغبيش، سبورة، رفع يد، تسجيل، مشاركة شاشة)
+    // -------------------------------------------------------------------------
+    document.getElementById('blurToggleBtn').addEventListener('click', (e) => {
+      AppState.isBlurActive = !AppState.isBlurActive;
+      e.currentTarget.classList.toggle('text-indigo-400', AppState.isBlurActive);
+      if (AppState.isBlurActive) {
+        DOM.blurCanvas.classList.remove('hidden');
+        renderCanvasBlur();
+      } else {
+        DOM.blurCanvas.classList.add('hidden');
+        if (AppState.blurAnimFrameId) {
+          cancelAnimationFrame(AppState.blurAnimFrameId);
+          AppState.blurAnimFrameId = null;
+        }
+      }
+    });
+
+    function renderCanvasBlur() {
+      if (!AppState.isBlurActive) return;
+      const ctx = DOM.blurCanvas.getContext('2d');
+      DOM.blurCanvas.width = DOM.localVideo.videoWidth || 640;
+      DOM.blurCanvas.height = DOM.localVideo.videoHeight || 480;
+
+      ctx.filter = 'blur(12px)';
+      ctx.drawImage(DOM.localVideo, 0, 0, DOM.blurCanvas.width, DOM.blurCanvas.height);
+      AppState.blurAnimFrameId = requestAnimationFrame(renderCanvasBlur);
+    }
+
+    // نظام السبورة
+    const wbCanvas = DOM.whiteboardCanvas;
+    const wbCtx = wbCanvas.getContext('2d');
+    let isDrawing = false;
+
+    document.getElementById('whiteboardToggleBtn').addEventListener('click', () => {
+      DOM.whiteboardPanel.classList.toggle('hidden');
+      DOM.whiteboardPanel.classList.toggle('flex');
+      wbCanvas.width = wbCanvas.parentElement.clientWidth;
+      wbCanvas.height = wbCanvas.parentElement.clientHeight;
+    });
+
+    document.getElementById('closeWhiteboardBtn').addEventListener('click', () => {
+      DOM.whiteboardPanel.classList.add('hidden');
+      DOM.whiteboardPanel.classList.remove('flex');
+    });
+
+    wbCanvas.addEventListener('mousedown', () => isDrawing = true);
+    wbCanvas.addEventListener('mouseup', () => { isDrawing = false; wbCtx.beginPath(); });
+    wbCanvas.addEventListener('mouseleave', () => { isDrawing = false; wbCtx.beginPath(); });
+    wbCanvas.addEventListener('mousemove', drawWhiteboard);
+
+    function drawWhiteboard(e) {
+      if (!isDrawing) return;
+      const rect = wbCanvas.getBoundingClientRect();
+      wbCtx.lineWidth = document.getElementById('wbSize').value;
+      wbCtx.lineCap = 'round';
+      wbCtx.strokeStyle = document.getElementById('wbColor').value;
+
+      wbCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      wbCtx.stroke();
+      wbCtx.beginPath();
+      wbCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    document.getElementById('wbClearBtn').addEventListener('click', () => {
+      wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+    });
+
+    // رفع اليد
+    document.getElementById('raiseHandBtn').addEventListener('click', (e) => {
+      AppState.isHandRaised = !AppState.isHandRaised;
+      DOM.localHandBadge.classList.toggle('hidden', !AppState.isHandRaised);
+      e.currentTarget.classList.toggle('bg-amber-500/20', AppState.isHandRaised);
+      broadcastDataPacket({ type: 'hand-raise', status: AppState.isHandRaised, userName: AppState.userName });
+    });
+
+    // تسجيل الاجتماع
+    document.getElementById('recordMeetingBtn').addEventListener('click', () => {
+      if (!AppState.isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    });
+
+    function startRecording() {
+      if (!AppState.localStream) return;
+      try {
+        AppState.recordedChunks = [];
+        AppState.mediaRecorder = new MediaRecorder(AppState.localStream);
+
+        AppState.mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) AppState.recordedChunks.push(e.data);
+        };
+        AppState.mediaRecorder.onstop = saveRecordingFile;
+
+        AppState.mediaRecorder.start();
+        AppState.isRecording = true;
+        DOM.recordingBadge.classList.remove('hidden');
+        DOM.recordingBadge.classList.add('flex');
+      } catch (err) {
+        console.error('تعذّر بدء التسجيل:', err);
+        showToast("تعذّر بدء التسجيل في هذا المتصفح.");
+      }
+    }
+
+    function stopRecording() {
+      if (AppState.mediaRecorder && AppState.isRecording) {
+        AppState.mediaRecorder.stop();
+      }
+      AppState.isRecording = false;
+      DOM.recordingBadge.classList.add('hidden');
+      DOM.recordingBadge.classList.remove('flex');
+    }
+
+    function saveRecordingFile() {
+      if (!AppState.recordedChunks.length) return;
+      const blob = new Blob(AppState.recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Meet-Ultra-Record-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // مشاركة الشاشة
+    function bindScreenShare() {
+      document.getElementById('screenShareBtn').addEventListener('click', async (e) => {
+        if (!AppState.isScreenSharing) {
+          try {
+            AppState.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+            const screenTrack = AppState.screenStream.getVideoTracks()[0];
+
+            // استبدال مسار الفيديو في كل الاتصالات النشطة
+            Object.values(AppState.mediaCalls).forEach(call => {
+              const sender = call.peerConnection && call.peerConnection.getSenders
+                ? call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video')
+                : null;
+              if (sender) sender.replaceTrack(screenTrack);
+            });
+
+            DOM.localVideo.srcObject = AppState.screenStream;
+            AppState.isScreenSharing = true;
+            e.currentTarget.classList.add('text-indigo-400');
+
+            screenTrack.onended = () => stopScreenShare();
+          } catch (err) {
+            console.warn('تم إلغاء مشاركة الشاشة أو حدث خطأ:', err);
+          }
+        } else {
+          stopScreenShare();
+        }
+      });
+    }
+
+    function stopScreenShare() {
+      if (AppState.screenStream) {
+        AppState.screenStream.getTracks().forEach(t => t.stop());
+        AppState.screenStream = null;
+      }
+      const camTrack = AppState.localStream.getVideoTracks()[0];
+      Object.values(AppState.mediaCalls).forEach(call => {
+        const sender = call.peerConnection && call.peerConnection.getSenders
+          ? call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video')
+          : null;
+        if (sender && camTrack) sender.replaceTrack(camTrack);
+      });
+      DOM.localVideo.srcObject = AppState.localStream;
+      AppState.isScreenSharing = false;
+      document.getElementById('screenShareBtn').classList.remove('text-indigo-400');
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. الحزم، الإيموجي، والمحادثة
+    // -------------------------------------------------------------------------
+    DOM.chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = DOM.chatInput.value.trim();
+      if (!text) return;
+
+      appendChatMessage(AppState.userName, text, true);
+      broadcastDataPacket({ type: 'chat', sender: AppState.userName, text });
+      DOM.chatInput.value = '';
+    });
+
+    function appendChatMessage(sender, text, isSelf = false) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `p-2.5 rounded-xl text-xs space-y-1 ${isSelf ? 'bg-indigo-600/20 border border-indigo-500/30 mr-4' : 'bg-slate-800 border border-slate-700 ml-4'}`;
+
+      const headerDiv = document.createElement('div');
+      headerDiv.className = "flex justify-between items-center text-[10px] text-slate-400";
+
+      const senderSpan = document.createElement('span');
+      senderSpan.className = `font-bold ${isSelf ? 'text-indigo-400' : 'text-purple-400'}`;
+      senderSpan.textContent = sender; // نص آمن، بدون innerHTML لتفادي XSS
+
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      headerDiv.appendChild(senderSpan);
+      headerDiv.appendChild(timeSpan);
+
+      const textP = document.createElement('p');
+      textP.className = "text-slate-200";
+      textP.textContent = text; // نص آمن
+
+      msgDiv.appendChild(headerDiv);
+      msgDiv.appendChild(textP);
+
+      DOM.chatMessages.appendChild(msgDiv);
+      DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
+    }
+
+    document.getElementById('emojiBtn').addEventListener('click', () => DOM.emojiPicker.classList.toggle('hidden'));
+
+    document.querySelectorAll('.emoji-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emoji = btn.innerText;
+        triggerEmojiFloating(emoji);
+        broadcastDataPacket({ type: 'emoji', emoji });
+        DOM.emojiPicker.classList.add('hidden');
+      });
+    });
+
+    function triggerEmojiFloating(emoji) {
+      const el = document.createElement('div');
+      el.className = "text-5xl animate-bounce duration-1000";
+      el.innerText = emoji;
+      DOM.emojiOverlay.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }
+
+    function broadcastDataPacket(packet) {
+      Object.values(AppState.activeConnections).forEach(conn => {
+        if (conn.open) conn.send(packet);
+      });
+    }
+
+    function handleIncomingDataPacket(data, fromPeerId) {
+      if (data.type === 'chat') {
+        appendChatMessage(data.sender, data.text, false);
+      }
+      if (data.type === 'emoji') {
+        triggerEmojiFloating(data.emoji);
+      }
+      if (data.type === 'hand-raise') {
+        showToast(data.status ? `${data.userName} رفع يده ✋` : `${data.userName} خفض يده`);
+      }
+      if (data.type === 'user-joined') {
+        AppState.participants[fromPeerId] = { userName: data.userName };
+        updateParticipantsList();
+        const tile = document.querySelector(`#tile-${fromPeerId} [data-name-label]`);
+        if (tile) tile.querySelector('span').textContent = data.userName;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. أدوات مساعدة عامة
+    // -------------------------------------------------------------------------
+    function startMeetingTimer() {
+      AppState.meetingStartTime = Date.now();
+      if (AppState.timerInterval) clearInterval(AppState.timerInterval);
+      AppState.timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - AppState.meetingStartTime) / 1000);
+        const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+        const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('meetingTimer').innerText = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    function updateParticipantsList() {
+      DOM.participantsList.innerHTML = '';
+
+      const selfItem = document.createElement('div');
+      selfItem.className = "p-2 rounded-xl bg-slate-800 text-xs flex justify-between items-center";
+      selfItem.innerHTML = `<span>${escapeHtml(AppState.userName)} (أنت)</span><span class="text-[10px] text-emerald-400 font-bold">${AppState.isHost ? 'المستضيف' : 'مشارك'}</span>`;
+      DOM.participantsList.appendChild(selfItem);
+
+      Object.entries(AppState.participants).forEach(([peerId, info]) => {
+        const item = document.createElement('div');
+        item.className = "p-2 rounded-xl bg-slate-800 text-xs flex justify-between items-center";
+        item.innerHTML = `<span>${escapeHtml(info.userName || 'مشارك')}</span><span class="text-[10px] text-slate-400 font-bold">مشارك</span>`;
+        DOM.participantsList.appendChild(item);
+      });
+
+      const total = 1 + Object.keys(AppState.participants).length;
+      DOM.userCount.textContent = total;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function bindGlobalEvents() {
+      document.getElementById('micBtn').addEventListener('click', () => {
+        if (!AppState.localStream) return;
+        AppState.isMuted = !AppState.isMuted;
+        const track = AppState.localStream.getAudioTracks()[0];
+        if (track) track.enabled = !AppState.isMuted;
+        syncMicUI();
+      });
+
+      document.getElementById('camBtn').addEventListener('click', () => {
+        if (!AppState.localStream) return;
+        AppState.isVideoOff = !AppState.isVideoOff;
+        const track = AppState.localStream.getVideoTracks()[0];
+        if (track) track.enabled = !AppState.isVideoOff;
+        syncCamUI();
+      });
+
+      document.getElementById('sidebarToggleBtn').addEventListener('click', () => {
+        DOM.sidebar.classList.toggle('hidden');
+        DOM.sidebar.classList.toggle('flex');
+      });
+
+      document.getElementById('closeSidebar').addEventListener('click', () => {
+        DOM.sidebar.classList.add('hidden');
+        DOM.sidebar.classList.remove('flex');
+      });
+
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        if (!AppState.roomId) return;
+        navigator.clipboard.writeText(AppState.roomId)
+          .then(() => showToast("تم نسخ كود الغرفة!"))
+          .catch(() => showToast("تعذّر نسخ الكود، انسخه يدويًا: " + AppState.roomId));
+      });
+
+      document.getElementById('scheduleMeetingBtn').addEventListener('click', () => {
+        showToast("ميزة جدولة الاجتماعات المستقبلية قادمة قريبًا.");
+      });
+
+      document.getElementById('leaveBtn').addEventListener('click', () => {
+        cleanupBeforeLeave();
+        window.location.reload();
+      });
+    }
+
+    function cleanupBeforeLeave() {
+      try {
+        Object.values(AppState.mediaCalls).forEach(call => call.close());
+        Object.values(AppState.activeConnections).forEach(conn => conn.close());
+        if (AppState.peer) AppState.peer.destroy();
+        if (AppState.localStream) AppState.localStream.getTracks().forEach(t => t.stop());
+        if (AppState.screenStream) AppState.screenStream.getTracks().forEach(t => t.stop());
+        if (AppState.timerInterval) clearInterval(AppState.timerInterval);
+        if (AppState.mediaRecorder && AppState.isRecording) AppState.mediaRecorder.stop();
+      } catch (e) {
+        console.warn('خطأ أثناء تنظيف الموارد قبل المغادرة:', e);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // تبويبات الشريط الجانبي (محادثة / مشاركون / تصويت)
+    // -------------------------------------------------------------------------
+    function bindSidebarTabs() {
+      const tabs = {
+        chat: { btn: document.getElementById('tabChatBtn'), body: document.getElementById('chatTabBody') },
+        users: { btn: document.getElementById('tabUsersBtn'), body: document.getElementById('usersTabBody') },
+        polls: { btn: document.getElementById('tabPollsBtn'), body: document.getElementById('pollsTabBody') }
+      };
+
+      function activate(tabKey) {
+        Object.entries(tabs).forEach(([key, { btn, body }]) => {
+          const active = key === tabKey;
+          body.classList.toggle('hidden', !active);
+          body.classList.toggle('flex', active);
+          btn.classList.toggle('bg-indigo-600', active);
+          btn.classList.toggle('text-white', active);
+          btn.classList.toggle('text-slate-400', !active);
+        });
+      }
+
+      tabs.chat.btn.addEventListener('click', () => activate('chat'));
+      tabs.users.btn.addEventListener('click', () => activate('users'));
+      tabs.polls.btn.addEventListener('click', () => activate('polls'));
+
+      // فتح الشريط تلقائيًا عند الضغط على تبويب وهو مغلق
+      Object.values(tabs).forEach(({ btn }) => {
+        btn.addEventListener('click', () => {
+          DOM.sidebar.classList.remove('hidden');
+          DOM.sidebar.classList.add('flex');
+        });
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // نظام التصويت السريع
+    // -------------------------------------------------------------------------
+    function bindPollSystem() {
+      const launchBtn = document.getElementById('launchPollBtn');
+      const activePollContainer = document.getElementById('activePollContainer');
+      const activePollQuestion = document.getElementById('activePollQuestion');
+      const pollOptionsList = document.getElementById('pollOptionsList');
+
+      let pollVotes = { opt1: 0, opt2: 0 };
+
+      launchBtn.addEventListener('click', () => {
+        const question = document.getElementById('pollQuestionInput').value.trim();
+        const opt1 = document.getElementById('pollOpt1Input').value.trim();
+        const opt2 = document.getElementById('pollOpt2Input').value.trim();
+
+        if (!question || !opt1 || !opt2) {
+          showToast("يرجى تعبئة السؤال والخيارين قبل الإطلاق.");
+          return;
+        }
+
+        pollVotes = { opt1: 0, opt2: 0 };
+        renderPoll(question, opt1, opt2);
+        broadcastDataPacket({ type: 'poll-launch', question, opt1, opt2 });
+      });
+
+      function renderPoll(question, opt1, opt2) {
+        activePollContainer.classList.remove('hidden');
+        activePollQuestion.textContent = question;
+        pollOptionsList.innerHTML = '';
+
+        [['opt1', opt1], ['opt2', opt2]].forEach(([key, label]) => {
+          const optBtn = document.createElement('button');
+          optBtn.type = 'button';
+          optBtn.className = "w-full text-right p-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600/30 border border-slate-700 text-xs flex justify-between items-center transition";
+          optBtn.innerHTML = `<span>${escapeHtml(label)}</span><span class="font-bold text-indigo-400">${pollVotes[key]}</span>`;
+          optBtn.addEventListener('click', () => {
+            pollVotes[key]++;
+            renderPoll(question, opt1, opt2);
+            broadcastDataPacket({ type: 'poll-vote', key });
+          });
+          pollOptionsList.appendChild(optBtn);
+        });
+      }
+
+      // استقبال أصوات وتصويتات من المشاركين الآخرين
+      const originalHandler = handleIncomingDataPacket;
+      window.__pollPacketHandler = (data) => {
+        if (data.type === 'poll-launch') {
+          pollVotes = { opt1: 0, opt2: 0 };
+          renderPoll(data.question, data.opt1, data.opt2);
+        }
+        if (data.type === 'poll-vote' && pollVotes[data.key] !== undefined) {
+          pollVotes[data.key]++;
+          activePollQuestion.dispatchEvent(new Event('vote-update'));
+          // إعادة رسم بالقيم الحالية
+          const q = activePollQuestion.textContent;
+          const labels = Array.from(pollOptionsList.querySelectorAll('span:first-child')).map(s => s.textContent);
+          if (q && labels.length === 2) renderPoll(q, labels[0], labels[1]);
+        }
+      };
+    }
+
+    // -------------------------------------------------------------------------
+    // تبديل تخطيط شبكة الفيديو (Grid / قائمة)
+    // -------------------------------------------------------------------------
+    function bindLayoutToggle() {
+      document.getElementById('layoutToggleBtn').addEventListener('click', (e) => {
+        if (AppState.currentLayout === 'grid') {
+          DOM.videoGrid.classList.remove('md:grid-cols-2', 'lg:grid-cols-3');
+          DOM.videoGrid.classList.add('grid-cols-1');
+          AppState.currentLayout = 'list';
+          e.currentTarget.querySelector('i').className = 'fa-solid fa-list';
+        } else {
+          DOM.videoGrid.classList.add('md:grid-cols-2', 'lg:grid-cols-3');
+          DOM.videoGrid.classList.remove('grid-cols-1');
+          AppState.currentLayout = 'grid';
+          e.currentTarget.querySelector('i').className = 'fa-solid fa-table-cells-large';
+        }
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // نافذة الإعدادات: فتح/إغلاق وحفظ التغييرات فعليًا
+    // -------------------------------------------------------------------------
+    function bindSettingsModal() {
+      const openModal = () => {
+        DOM.settingsUsername.value = AppState.userName || DOM.lobbyUsername.value || '';
+        DOM.settingsModal.classList.remove('hidden');
+        DOM.settingsModal.classList.add('flex');
+      };
+      const closeModal = () => {
+        DOM.settingsModal.classList.add('hidden');
+        DOM.settingsModal.classList.remove('flex');
+      };
+
+      document.getElementById('openSettingsHome').addEventListener('click', openModal);
+      document.getElementById('openSettingsMeeting').addEventListener('click', openModal);
+      document.getElementById('closeSettingsModal').addEventListener('click', closeModal);
+      DOM.settingsModal.addEventListener('click', (e) => {
+        if (e.target === DOM.settingsModal) closeModal();
+      });
+
+      document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+        const newName = DOM.settingsUsername.value.trim();
+        if (newName) {
+          AppState.userName = newName;
+          DOM.lobbyUsername.value = newName;
+          const tag = document.getElementById('localUserNameTag');
+          if (tag) {
+            tag.textContent = AppState.isHost ? `${newName} (أنت، المستضيف)` : `${newName} (أنت)`;
+          }
+          updateParticipantsList();
+        }
+
+        const micId = document.getElementById('micSelect').value;
+        const camId = document.getElementById('camSelect').value;
+
+        if ((micId || camId) && AppState.localStream) {
+          try {
+            const constraints = {
+              audio: micId ? { deviceId: { exact: micId } } : true,
+              video: camId ? { deviceId: { exact: camId } } : true
+            };
+            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+            // إيقاف المسارات القديمة
+            AppState.localStream.getTracks().forEach(t => t.stop());
+            AppState.localStream = newStream;
+
+            DOM.previewVideo.srcObject = newStream;
+            DOM.localVideo.srcObject = newStream;
+
+            // استبدال المسارات في أي اتصالات نشطة
+            const newAudioTrack = newStream.getAudioTracks()[0];
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            Object.values(AppState.mediaCalls).forEach(call => {
+              if (call.peerConnection && call.peerConnection.getSenders) {
+                call.peerConnection.getSenders().forEach(sender => {
+                  if (sender.track && sender.track.kind === 'audio' && newAudioTrack) sender.replaceTrack(newAudioTrack);
+                  if (sender.track && sender.track.kind === 'video' && newVideoTrack) sender.replaceTrack(newVideoTrack);
+                });
+              }
+            });
+
+            AppState.isMuted = false;
+            AppState.isVideoOff = false;
+            syncMicUI();
+            syncCamUI();
+          } catch (err) {
+            console.error('تعذّر تبديل الجهاز:', err);
+            showToast("تعذّر تبديل الميكروفون أو الكاميرا المحددة.");
+          }
+        }
+
+        showToast("تم حفظ التغييرات بنجاح.");
+        closeModal();
+      });
+    }
+  </script>
+</body>
+</html>
