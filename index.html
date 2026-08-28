@@ -258,44 +258,44 @@
   <!-- ========================================================================= -->
   <div id="meetingSection" class="hidden flex-1 flex-col h-screen overflow-hidden relative z-20">
 
-    <header class="h-16 bg-slate-900/90 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-md z-30">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2">
+    <header class="h-16 bg-slate-900/90 border-b border-slate-800 px-3 sm:px-6 flex items-center justify-between backdrop-blur-md z-30 gap-2">
+      <div class="flex items-center gap-2 sm:gap-4 min-w-0">
+        <div class="flex items-center gap-2 shrink-0">
           <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="meetingTitleText" class="font-bold text-sm tracking-wide">اجتماع مباشر</span>
+          <span id="meetingTitleText" class="font-bold text-sm tracking-wide hidden sm:inline">اجتماع مباشر</span>
         </div>
 
-        <div class="h-4 w-px bg-slate-800"></div>
+        <div class="h-4 w-px bg-slate-800 hidden sm:block"></div>
 
-        <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700">
-          <span class="text-xs text-slate-400">الكود:</span>
-          <strong id="displayRoomId" class="text-xs font-mono text-indigo-400 tracking-widest">------</strong>
-          <button id="copyBtn" title="نسخ رابط الانضمام المباشر" class="text-slate-400 hover:text-white mr-1 text-xs">
+        <div class="flex items-center gap-2 bg-slate-800/80 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-700 min-w-0">
+          <span class="text-xs text-slate-400 hidden sm:inline">الكود:</span>
+          <strong id="displayRoomId" class="text-xs font-mono text-indigo-400 tracking-widest truncate">------</strong>
+          <button id="copyBtn" title="نسخ رابط الانضمام المباشر" class="text-slate-400 hover:text-white mr-1 text-xs shrink-0">
             <i class="fa-solid fa-copy"></i>
           </button>
-          <button id="shareBtn" title="مشاركة رابط الانضمام" class="hidden text-slate-400 hover:text-white text-xs">
+          <button id="shareBtn" title="مشاركة رابط الانضمام" class="hidden text-slate-400 hover:text-white text-xs shrink-0">
             <i class="fa-solid fa-share-nodes"></i>
           </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
-        <div id="recordingBadge" class="hidden items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-full text-xs font-bold animate-pulse">
+        <div id="recordingBadge" class="hidden items-center gap-2 px-2.5 sm:px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-full text-[10px] sm:text-xs font-bold animate-pulse">
           <span class="w-2 h-2 rounded-full bg-red-500"></span>
-          <span>جاري التسجيل...</span>
+          <span class="hidden sm:inline">جاري التسجيل...</span>
         </div>
 
-        <button id="layoutToggleBtn" title="تغيير طريقة العرض" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
+        <button id="layoutToggleBtn" title="تغيير طريقة العرض" class="hidden sm:block p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
           <i class="fa-solid fa-table-cells-large"></i>
         </button>
 
-        <button id="hostAdminBtn" class="hidden bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold items-center gap-1.5 hover:bg-amber-500/20 transition">
+        <button id="hostAdminBtn" class="hidden bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold items-center gap-1.5 hover:bg-amber-500/20 transition">
           <i class="fa-solid fa-crown"></i>
-          <span>لوحة المشرف</span>
+          <span class="hidden sm:inline">لوحة المشرف</span>
         </button>
 
-        <button id="themeToggleMeeting" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
+        <button id="themeToggleMeeting" class="hidden sm:block p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
           <i class="fa-solid fa-moon dark:hidden"></i>
           <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
         </button>
@@ -304,11 +304,15 @@
 
     <div class="flex-1 flex relative overflow-hidden bg-slate-950">
 
-      <main id="videoGrid" class="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-center justify-center overflow-y-auto transition-all duration-300 auto-rows-fr">
+      <main id="videoGrid" class="flex-1 p-2 sm:p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 items-start justify-center overflow-y-auto transition-all duration-300 auto-rows-fr">
 
-        <div id="localVideoContainer" class="relative w-full h-[320px] lg:h-[380px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group transition-all">
+        <div id="localVideoContainer" class="relative w-full h-[220px] sm:h-[320px] lg:h-[380px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group transition-all">
           <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
           <canvas id="blurCanvas" class="hidden absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
+
+          <button class="tile-pin-btn hidden sm:flex opacity-0 group-hover:opacity-100 absolute top-3 left-3 w-8 h-8 rounded-lg bg-slate-950/80 border border-slate-800 items-center justify-center text-slate-300 hover:text-indigo-400 transition">
+            <i class="fa-solid fa-expand text-xs"></i>
+          </button>
 
           <div class="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-slate-800">
             <span id="localUserNameTag">أنت (المستضيف)</span>
@@ -324,7 +328,7 @@
 
       <div id="emojiOverlay" class="absolute inset-x-0 bottom-24 pointer-events-none flex justify-center gap-6 z-40"></div>
 
-      <aside id="sidebar" class="hidden w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex-col z-30 transition-all shadow-2xl">
+      <aside id="sidebar" class="hidden w-full sm:w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex-col z-30 transition-all shadow-2xl fixed sm:relative inset-0 sm:inset-auto">
 
         <div class="h-14 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-950/50">
           <div class="flex gap-1">
@@ -390,43 +394,44 @@
 
     </div>
 
-    <footer class="h-20 bg-slate-900/95 border-t border-slate-800 px-6 flex items-center justify-between backdrop-blur-md z-30">
+    <footer class="min-h-[5rem] py-3 bg-slate-900/95 border-t border-slate-800 px-3 sm:px-6 flex items-center justify-between backdrop-blur-md z-30 flex-wrap gap-y-2">
 
-      <div class="text-xs font-mono text-slate-400 hidden sm:block">
+      <div class="text-xs font-mono text-slate-400 hidden lg:block order-1">
         <span id="meetingTimer">00:00:00</span>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+      <div class="flex items-center gap-1.5 sm:gap-3 justify-center flex-1 order-2">
 
-        <button id="micBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition">
+        <button id="micBtn" title="الميكروفون" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition shrink-0">
           <i id="micIcon" class="fa-solid fa-microphone text-base"></i>
         </button>
 
-        <button id="camBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition">
+        <button id="camBtn" title="الكاميرا" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition shrink-0">
           <i id="camIcon" class="fa-solid fa-video text-base"></i>
         </button>
 
-        <button id="blurToggleBtn" title="تغبيش الخلفية" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+        <!-- أدوات ثانوية: تظهر كاملة على الشاشات الأكبر فقط -->
+        <button id="blurToggleBtn" title="تغبيش الخلفية" class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 items-center justify-center transition shrink-0">
           <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
         </button>
 
-        <button id="screenShareBtn" title="مشاركة الشاشة" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+        <button id="screenShareBtn" title="مشاركة الشاشة" class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 items-center justify-center transition shrink-0">
           <i class="fa-solid fa-desktop text-base"></i>
         </button>
 
-        <button id="whiteboardToggleBtn" title="السبورة التفاعلية" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-indigo-400 flex items-center justify-center transition">
+        <button id="whiteboardToggleBtn" title="السبورة التفاعلية" class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-indigo-400 items-center justify-center transition shrink-0">
           <i class="fa-solid fa-pen-ruler text-base"></i>
         </button>
 
-        <button id="raiseHandBtn" title="رفع اليد" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-400 flex items-center justify-center transition">
+        <button id="raiseHandBtn" title="رفع اليد" class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-400 items-center justify-center transition shrink-0">
           <i class="fa-solid fa-hand text-base"></i>
         </button>
 
-        <button id="recordMeetingBtn" title="تسجيل الاجتماع" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-red-400 flex items-center justify-center transition">
+        <button id="recordMeetingBtn" title="تسجيل الاجتماع" class="hidden sm:flex w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-red-400 items-center justify-center transition shrink-0">
           <i class="fa-solid fa-circle-dot text-base"></i>
         </button>
 
-        <div class="relative">
+        <div class="relative hidden sm:block">
           <button id="emojiBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 flex items-center justify-center transition">
             <i class="fa-solid fa-face-smile text-base"></i>
           </button>
@@ -440,21 +445,78 @@
           </div>
         </div>
 
-        <button id="sidebarToggleBtn" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
-          <i class="fa-solid fa-comments text-base"></i>
-        </button>
+        <!-- زر "المزيد" يظهر على الهاتف فقط ويجمع الأدوات الثانوية -->
+        <div class="relative sm:hidden">
+          <button id="moreToolsBtn" title="المزيد من الأدوات" class="w-11 h-11 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition shrink-0">
+            <i class="fa-solid fa-ellipsis text-base"></i>
+          </button>
+        </div>
 
-        <button id="leaveBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 h-12 rounded-2xl flex items-center gap-2 transition shadow-lg shadow-red-600/30 ml-2">
+        <div class="relative shrink-0">
+          <button id="sidebarToggleBtn" title="المحادثة والمشاركون" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+            <i class="fa-solid fa-comments text-base"></i>
+          </button>
+          <span id="chatUnreadBadge" class="hidden absolute -top-1.5 -left-1.5 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold items-center justify-center">0</span>
+        </div>
+
+        <button id="leaveBtn" title="مغادرة" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 sm:px-6 h-11 sm:h-12 rounded-2xl flex items-center gap-2 transition shadow-lg shadow-red-600/30 shrink-0">
           <i class="fa-solid fa-phone-slash"></i>
           <span class="hidden md:inline">مغادرة</span>
         </button>
       </div>
 
-      <button id="openSettingsMeeting" class="text-slate-400 hover:text-white p-2">
-        <i class="fa-solid fa-gear text-lg"></i>
-      </button>
+      <div class="hidden lg:flex items-center gap-1 order-3">
+        <button id="fullscreenToggleBtn" title="ملء الشاشة" class="text-slate-400 hover:text-white p-2">
+          <i class="fa-solid fa-expand text-lg"></i>
+        </button>
+        <button id="openSettingsMeeting" title="الإعدادات" class="text-slate-400 hover:text-white p-2">
+          <i class="fa-solid fa-gear text-lg"></i>
+        </button>
+      </div>
 
     </footer>
+
+    <!-- ورقة "المزيد من الأدوات" السفلية لشاشات الهاتف -->
+    <div id="moreToolsSheet" class="hidden fixed inset-0 z-50 items-end sm:hidden">
+      <div id="moreToolsOverlay" class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"></div>
+      <div class="relative w-full bg-slate-900 border-t border-slate-800 rounded-t-3xl p-5 pb-8 shadow-2xl animate-[float_0.01s]">
+        <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+        <div class="grid grid-cols-4 gap-3 text-center">
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="blurToggleBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+            <span class="text-[10px]">تغبيش</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="screenShareBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-desktop"></i></span>
+            <span class="text-[10px]">مشاركة الشاشة</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="whiteboardToggleBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-pen-ruler text-indigo-400"></i></span>
+            <span class="text-[10px]">السبورة</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="raiseHandBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-hand text-amber-400"></i></span>
+            <span class="text-[10px]">رفع اليد</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="recordMeetingBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-circle-dot text-red-400"></i></span>
+            <span class="text-[10px]">تسجيل</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="emojiBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-face-smile text-amber-300"></i></span>
+            <span class="text-[10px]">تفاعلات</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="layoutToggleBtn">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-table-cells-large"></i></span>
+            <span class="text-[10px]">طريقة العرض</span>
+          </button>
+          <button class="more-tool-item flex flex-col items-center gap-1.5 text-slate-300" data-target="openSettingsMeeting">
+            <span class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-gear"></i></span>
+            <span class="text-[10px]">الإعدادات</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
   </div>
 
@@ -486,9 +548,51 @@
           <label class="block font-semibold text-slate-400 mb-1">الكاميرا (الفيديو)</label>
           <select id="camSelect" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-slate-100 focus:outline-none focus:border-indigo-500"></select>
         </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <div class="font-semibold text-slate-400 mb-1.5">اختصارات لوحة المفاتيح</div>
+          <div class="grid grid-cols-2 gap-1.5 text-slate-500">
+            <span><kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">M</kbd> كتم/تشغيل الميكروفون</span>
+            <span><kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">V</kbd> تشغيل/إيقاف الكاميرا</span>
+            <span><kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">H</kbd> رفع/خفض اليد</span>
+          </div>
+        </div>
       </div>
 
       <button id="saveSettingsBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">حفظ التغييرات</button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- لوحة تحكم المضيف (HOST ADMIN PANEL)                                      -->
+  <!-- ========================================================================= -->
+  <div id="hostAdminModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-base flex items-center gap-2 text-amber-400">
+          <i class="fa-solid fa-crown"></i> لوحة تحكم المضيف
+        </h3>
+        <button id="closeHostAdminModal" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <button id="muteAllBtn" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2">
+        <i class="fa-solid fa-microphone-slash text-red-400"></i> كتم صوت الجميع
+      </button>
+
+      <div id="hostAdminParticipantsList" class="space-y-2 overflow-y-auto flex-1 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- نافذة تأكيد عامة (لتأكيد المغادرة/الإخراج بدل alert)                      -->
+  <!-- ========================================================================= -->
+  <div id="confirmModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[60] items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+      <div id="confirmModalMessage" class="text-sm text-slate-200 font-semibold"></div>
+      <div class="flex gap-3">
+        <button id="confirmModalCancel" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs">إلغاء</button>
+        <button id="confirmModalOk" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs">تأكيد</button>
+      </div>
     </div>
   </div>
 
@@ -527,7 +631,8 @@
       meetingStartTime: null,
       timerInterval: null,
       currentLayout: 'grid',
-      joinAttempts: 0
+      joinAttempts: 0,
+      pinnedTileId: null
     };
 
     const DOM = {
@@ -589,6 +694,12 @@
       bindLayoutToggle();
       bindScreenShare();
       prefillRoomFromUrl();
+      bindMoreToolsSheet();
+      bindHostAdminPanel();
+      bindKeyboardShortcuts();
+      bindConfirmModal();
+      bindFullscreenToggle();
+      bindTilePin(document.getElementById('localVideoContainer'), 'local');
     });
 
     // -------------------------------------------------------------------------
@@ -945,7 +1056,7 @@
 
       const container = document.createElement('div');
       container.id = `tile-${peerId}`;
-      container.className = "relative w-full h-[320px] lg:h-[380px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group transition-all";
+      container.className = "relative w-full h-[220px] sm:h-[320px] lg:h-[380px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group transition-all";
 
       const video = document.createElement('video');
       video.srcObject = stream;
@@ -953,15 +1064,22 @@
       video.playsInline = true;
       video.className = "w-full h-full object-cover";
 
+      const pinBtn = document.createElement('button');
+      pinBtn.className = "tile-pin-btn hidden sm:flex opacity-0 group-hover:opacity-100 absolute top-3 left-3 w-8 h-8 rounded-lg bg-slate-950/80 border border-slate-800 items-center justify-center text-slate-300 hover:text-indigo-400 transition";
+      pinBtn.innerHTML = '<i class="fa-solid fa-expand text-xs"></i>';
+
       const badge = document.createElement('div');
       badge.className = "absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-slate-800";
       const knownName = AppState.participants[peerId] && AppState.participants[peerId].userName;
-      badge.innerHTML = `<span>${knownName || 'مشارك'}</span>`;
+      badge.innerHTML = `<span>${escapeHtml(knownName || 'مشارك')}</span>`;
       badge.dataset.nameLabel = 'true';
 
       container.appendChild(video);
+      container.appendChild(pinBtn);
       container.appendChild(badge);
       DOM.videoGrid.appendChild(container);
+
+      bindTilePin(container, peerId);
 
       if (!AppState.participants[peerId]) {
         AppState.participants[peerId] = { userName: 'مشارك' };
@@ -969,9 +1087,41 @@
       updateParticipantsList();
     }
 
+    // -------------------------------------------------------------------------
+    // تثبيت/تكبير بطاقة فيديو (Spotlight) بالنقر على زر التثبيت أو النقر المزدوج
+    // -------------------------------------------------------------------------
+    function bindTilePin(tileEl, tileId) {
+      const pinBtn = tileEl.querySelector('.tile-pin-btn');
+      const togglePin = () => {
+        const isCurrentlyPinned = AppState.pinnedTileId === tileId;
+        // إزالة التثبيت من أي بطاقة أخرى أولاً
+        document.querySelectorAll('.spotlight-tile').forEach(el => {
+          el.classList.remove('spotlight-tile', 'col-span-full', 'order-first', 'h-[320px]', 'sm:h-[420px]', 'lg:h-[520px]');
+          const icon = el.querySelector('.tile-pin-btn i');
+          if (icon) icon.className = 'fa-solid fa-expand text-xs';
+        });
+
+        if (!isCurrentlyPinned) {
+          tileEl.classList.add('spotlight-tile', 'col-span-full', 'order-first', 'h-[320px]', 'sm:h-[420px]', 'lg:h-[520px]');
+          AppState.pinnedTileId = tileId;
+          const icon = tileEl.querySelector('.tile-pin-btn i');
+          if (icon) icon.className = 'fa-solid fa-compress text-xs';
+        } else {
+          AppState.pinnedTileId = null;
+        }
+      };
+
+      if (pinBtn) pinBtn.addEventListener('click', togglePin);
+      tileEl.addEventListener('dblclick', togglePin);
+    }
+
     function removeRemoteStreamTile(peerId) {
       const tile = document.getElementById(`tile-${peerId}`);
       if (tile) tile.remove();
+
+      if (AppState.pinnedTileId === peerId) {
+        AppState.pinnedTileId = null;
+      }
 
       if (AppState.mediaCalls[peerId]) {
         try { AppState.mediaCalls[peerId].close(); } catch (e) {}
@@ -1036,6 +1186,25 @@
     wbCanvas.addEventListener('mouseup', () => { isDrawing = false; wbCtx.beginPath(); });
     wbCanvas.addEventListener('mouseleave', () => { isDrawing = false; wbCtx.beginPath(); });
     wbCanvas.addEventListener('mousemove', drawWhiteboard);
+
+    // دعم اللمس للسبورة على الهاتف والتابلت
+    wbCanvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const touch = e.touches[0];
+      const rect = wbCanvas.getBoundingClientRect();
+      wbCtx.beginPath();
+      wbCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+    }, { passive: false });
+
+    wbCanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const touch = e.touches[0];
+      drawWhiteboard({ clientX: touch.clientX, clientY: touch.clientY });
+    }, { passive: false });
+
+    wbCanvas.addEventListener('touchend', () => { isDrawing = false; wbCtx.beginPath(); });
 
     function drawWhiteboard(e) {
       if (!isDrawing) return;
@@ -1198,6 +1367,30 @@
 
       DOM.chatMessages.appendChild(msgDiv);
       DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
+
+      // إشعار الرسائل غير المقروءة إن كانت الرسالة واردة والشريط الجانبي مغلق أو تبويب آخر مفتوح
+      if (!isSelf) {
+        const sidebarClosed = DOM.sidebar.classList.contains('hidden');
+        const chatTabHidden = document.getElementById('chatTabBody').classList.contains('hidden');
+        if (sidebarClosed || chatTabHidden) {
+          bumpChatUnreadBadge();
+        }
+      }
+    }
+
+    let chatUnreadCount = 0;
+    function bumpChatUnreadBadge() {
+      chatUnreadCount++;
+      const badge = document.getElementById('chatUnreadBadge');
+      badge.textContent = chatUnreadCount > 9 ? '9+' : chatUnreadCount;
+      badge.classList.remove('hidden');
+      badge.classList.add('flex');
+    }
+    function clearChatUnreadBadge() {
+      chatUnreadCount = 0;
+      const badge = document.getElementById('chatUnreadBadge');
+      badge.classList.add('hidden');
+      badge.classList.remove('flex');
     }
 
     document.getElementById('emojiBtn').addEventListener('click', () => DOM.emojiPicker.classList.toggle('hidden'));
@@ -1241,6 +1434,26 @@
         const tile = document.querySelector(`#tile-${fromPeerId} [data-name-label]`);
         if (tile) tile.querySelector('span').textContent = data.userName;
       }
+      // كتم قسري من المضيف (فردي أو للجميع)
+      if (data.type === 'force-mute' && !AppState.isMuted) {
+        AppState.isMuted = true;
+        const track = AppState.localStream && AppState.localStream.getAudioTracks()[0];
+        if (track) track.enabled = false;
+        syncMicUI();
+        showToast("تم كتم صوتك من قِبل المضيف.");
+      }
+      // إخراج من الاجتماع بواسطة المضيف
+      if (data.type === 'kicked') {
+        showToast("تم إخراجك من الاجتماع من قِبل المضيف.");
+        setTimeout(() => {
+          cleanupBeforeLeave();
+          window.location.href = window.location.pathname;
+        }, 1200);
+      }
+      // توجيه حزم التصويت لمعالجها المخصص إن كان مسجّلاً
+      if ((data.type === 'poll-launch' || data.type === 'poll-vote') && window.__pollPacketHandler) {
+        window.__pollPacketHandler(data);
+      }
     }
 
     // -------------------------------------------------------------------------
@@ -1275,6 +1488,8 @@
 
       const total = 1 + Object.keys(AppState.participants).length;
       DOM.userCount.textContent = total;
+
+      if (AppState.isHost) renderHostAdminList();
     }
 
     function escapeHtml(str) {
@@ -1303,6 +1518,10 @@
       document.getElementById('sidebarToggleBtn').addEventListener('click', () => {
         DOM.sidebar.classList.toggle('hidden');
         DOM.sidebar.classList.toggle('flex');
+        // إن كانت تبويبة المحادثة هي المفتوحة، اعتبر الرسائل مقروءة
+        if (!DOM.sidebar.classList.contains('hidden') && !document.getElementById('chatTabBody').classList.contains('hidden')) {
+          clearChatUnreadBadge();
+        }
       });
 
       document.getElementById('closeSidebar').addEventListener('click', () => {
@@ -1336,8 +1555,10 @@
       });
 
       document.getElementById('leaveBtn').addEventListener('click', () => {
-        cleanupBeforeLeave();
-        window.location.reload();
+        showConfirm("هل أنت متأكد أنك تريد مغادرة الاجتماع؟", () => {
+          cleanupBeforeLeave();
+          window.location.href = window.location.pathname;
+        });
       });
     }
 
@@ -1376,7 +1597,7 @@
         });
       }
 
-      tabs.chat.btn.addEventListener('click', () => activate('chat'));
+      tabs.chat.btn.addEventListener('click', () => { activate('chat'); clearChatUnreadBadge(); });
       tabs.users.btn.addEventListener('click', () => activate('users'));
       tabs.polls.btn.addEventListener('click', () => activate('polls'));
 
@@ -1546,6 +1767,191 @@
 
         showToast("تم حفظ التغييرات بنجاح.");
         closeModal();
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // ورقة "المزيد من الأدوات" (نسخة مبسّطة من شريط التحكم لشاشات الهاتف)
+    // -------------------------------------------------------------------------
+    function bindMoreToolsSheet() {
+      const sheet = document.getElementById('moreToolsSheet');
+      const overlay = document.getElementById('moreToolsOverlay');
+
+      const openSheet = () => {
+        sheet.classList.remove('hidden');
+        sheet.classList.add('flex');
+      };
+      const closeSheet = () => {
+        sheet.classList.add('hidden');
+        sheet.classList.remove('flex');
+      };
+
+      document.getElementById('moreToolsBtn').addEventListener('click', openSheet);
+      overlay.addEventListener('click', closeSheet);
+
+      document.querySelectorAll('.more-tool-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.target;
+          const targetBtn = document.getElementById(targetId);
+          closeSheet();
+          // ننفّذ الإجراء بعد إغلاق الورقة مباشرة حتى لا يتداخل مع أي نافذة يفتحها الزر
+          setTimeout(() => { if (targetBtn) targetBtn.click(); }, 150);
+        });
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // لوحة تحكم المضيف: كتم الجميع / كتم مشارك / إخراج مشارك
+    // -------------------------------------------------------------------------
+    function bindHostAdminPanel() {
+      const modal = document.getElementById('hostAdminModal');
+      const openModal = () => {
+        renderHostAdminList();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      };
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      document.getElementById('hostAdminBtn').addEventListener('click', openModal);
+      document.getElementById('closeHostAdminModal').addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+      document.getElementById('muteAllBtn').addEventListener('click', () => {
+        broadcastDataPacket({ type: 'force-mute' });
+        showToast("تم إرسال أمر كتم الصوت لجميع المشاركين.");
+      });
+    }
+
+    function renderHostAdminList() {
+      const list = document.getElementById('hostAdminParticipantsList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const entries = Object.entries(AppState.participants);
+      if (!entries.length) {
+        list.innerHTML = '<div class="text-slate-500 text-center py-4">لا يوجد مشاركون آخرون بعد.</div>';
+        return;
+      }
+
+      entries.forEach(([peerId, info]) => {
+        const row = document.createElement('div');
+        row.className = "p-2.5 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between gap-2";
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = "font-semibold truncate flex-1";
+        nameSpan.textContent = info.userName || 'مشارك';
+
+        const muteBtn = document.createElement('button');
+        muteBtn.className = "w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-slate-300 shrink-0";
+        muteBtn.title = "كتم هذا المشارك";
+        muteBtn.innerHTML = '<i class="fa-solid fa-microphone-slash text-[11px]"></i>';
+        muteBtn.addEventListener('click', () => {
+          const conn = AppState.activeConnections[peerId];
+          if (conn && conn.open) {
+            conn.send({ type: 'force-mute' });
+            showToast(`تم كتم ${info.userName || 'المشارك'}.`);
+          }
+        });
+
+        const kickBtn = document.createElement('button');
+        kickBtn.className = "w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0";
+        kickBtn.title = "إخراج هذا المشارك";
+        kickBtn.innerHTML = '<i class="fa-solid fa-user-xmark text-[11px]"></i>';
+        kickBtn.addEventListener('click', () => {
+          showConfirm(`هل تريد إخراج ${info.userName || 'هذا المشارك'} من الاجتماع؟`, () => {
+            const conn = AppState.activeConnections[peerId];
+            if (conn && conn.open) conn.send({ type: 'kicked' });
+            setTimeout(() => removeRemoteStreamTile(peerId), 400);
+          });
+        });
+
+        row.appendChild(nameSpan);
+        row.appendChild(muteBtn);
+        row.appendChild(kickBtn);
+        list.appendChild(row);
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // اختصارات لوحة المفاتيح: M كتم، V كاميرا، H رفع اليد
+    // -------------------------------------------------------------------------
+    function bindKeyboardShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        // تجاهل الاختصارات أثناء الكتابة في أي حقل نصي
+        const tag = document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement.isContentEditable) return;
+        // فقط أثناء وجود المستخدم داخل الاجتماع فعليًا
+        if (DOM.meetingSection.classList.contains('hidden')) return;
+
+        const key = e.key.toLowerCase();
+        if (key === 'm') {
+          document.getElementById('micBtn').click();
+        } else if (key === 'v') {
+          document.getElementById('camBtn').click();
+        } else if (key === 'h') {
+          document.getElementById('raiseHandBtn').click();
+        }
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // نافذة تأكيد عامة تحل محل confirm()/alert() الافتراضية في المتصفح
+    // -------------------------------------------------------------------------
+    function bindConfirmModal() {
+      const modal = document.getElementById('confirmModal');
+      const cancelBtn = document.getElementById('confirmModalCancel');
+      const okBtn = document.getElementById('confirmModalOk');
+
+      modal._close = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      cancelBtn.addEventListener('click', () => modal._close());
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal._close(); });
+    }
+
+    function showConfirm(message, onConfirm) {
+      const modal = document.getElementById('confirmModal');
+      const okBtn = document.getElementById('confirmModalOk');
+      document.getElementById('confirmModalMessage').textContent = message;
+
+      // استبدال الزر لتفادي تراكم مستمعي الأحداث من استدعاءات سابقة
+      const newOkBtn = okBtn.cloneNode(true);
+      okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+      newOkBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        onConfirm();
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    // -------------------------------------------------------------------------
+    // تبديل وضع ملء الشاشة للاجتماع كاملاً
+    // -------------------------------------------------------------------------
+    function bindFullscreenToggle() {
+      const btn = document.getElementById('fullscreenToggleBtn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {
+            showToast("تعذّر تفعيل وضع ملء الشاشة في هذا المتصفح.");
+          });
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      document.addEventListener('fullscreenchange', () => {
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = document.fullscreenElement ? 'fa-solid fa-compress text-lg' : 'fa-solid fa-expand text-lg';
       });
     }
   </script>
