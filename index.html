@@ -182,7 +182,7 @@
           <div class="flex gap-2">
             <div class="relative flex-1">
               <i class="fa-solid fa-keyboard absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-              <input id="roomInput" type="text" placeholder="أدخل كود الغرفة هنا..." class="w-full bg-slate-900/90 border border-slate-800 pr-11 pl-4 py-3.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition font-mono">
+              <input id="roomInput" type="text" placeholder="أدخل كود الغرفة هنا..." autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" class="w-full bg-slate-900/90 border border-slate-800 pr-11 pl-4 py-3.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 transition font-mono">
             </div>
             <button id="joinBtn" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-6 py-3.5 rounded-xl font-bold transition duration-300">
               انضمام
@@ -269,9 +269,12 @@
 
         <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700">
           <span class="text-xs text-slate-400">الكود:</span>
-          <strong id="displayRoomId" class="text-xs font-mono text-indigo-400 tracking-wider">------</strong>
-          <button id="copyBtn" title="نسخ رابط الغرفة" class="text-slate-400 hover:text-white mr-1 text-xs">
+          <strong id="displayRoomId" class="text-xs font-mono text-indigo-400 tracking-widest">------</strong>
+          <button id="copyBtn" title="نسخ رابط الانضمام المباشر" class="text-slate-400 hover:text-white mr-1 text-xs">
             <i class="fa-solid fa-copy"></i>
+          </button>
+          <button id="shareBtn" title="مشاركة رابط الانضمام" class="hidden text-slate-400 hover:text-white text-xs">
+            <i class="fa-solid fa-share-nodes"></i>
           </button>
         </div>
       </div>
@@ -523,7 +526,8 @@
       blurAnimFrameId: null,
       meetingStartTime: null,
       timerInterval: null,
-      currentLayout: 'grid'
+      currentLayout: 'grid',
+      joinAttempts: 0
     };
 
     const DOM = {
@@ -555,6 +559,24 @@
       roomInput: document.getElementById('roomInput')
     };
 
+    function buildJoinLink(roomId) {
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.hash = '';
+      url.searchParams.set('room', roomId);
+      return url.toString();
+    }
+
+    // إن فتح المستخدم رابط انضمام مباشر (?room=xxx) نعبّئ الكود تلقائيًا لتفادي الكتابة اليدوية
+    function prefillRoomFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const roomFromUrl = params.get('room');
+      if (roomFromUrl) {
+        DOM.roomInput.value = roomFromUrl.trim().toLowerCase();
+        showToast("تم تعبئة كود الغرفة من الرابط، اضغط انضمام للمتابعة.");
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initThemeHandler();
       setupLobbyPreview();
@@ -566,6 +588,7 @@
       bindPollSystem();
       bindLayoutToggle();
       bindScreenShare();
+      prefillRoomFromUrl();
     });
 
     // -------------------------------------------------------------------------
@@ -709,44 +732,96 @@
     // -------------------------------------------------------------------------
     // 3. محرك اتصال WebRTC
     // -------------------------------------------------------------------------
+    // مولّد كود غرفة يتجنّب الأحرف المتشابهة بصريًا (0/o, 1/l/i) لتقليل أخطاء الكتابة اليدوية
+    // عند نقل الكود بين جهازين مختلفين
+    const ROOM_CODE_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789';
+    function generateRoomCode(length = 6) {
+      let code = '';
+      for (let i = 0; i < length; i++) {
+        code += ROOM_CODE_CHARS[Math.floor(Math.random() * ROOM_CODE_CHARS.length)];
+      }
+      return code;
+    }
+
     document.getElementById('createBtn').addEventListener('click', async () => {
+      if (!AppState.localStream) {
+        showToast("يرجى الانتظار حتى تجهيز الكاميرا والميكروفون...");
+        return;
+      }
       AppState.isHost = true;
       AppState.userName = DOM.lobbyUsername.value.trim() || 'المستضيف';
-      AppState.roomId = Math.random().toString(36).substring(2, 8);
+      AppState.roomId = generateRoomCode();
 
       initPeerSession(AppState.roomId);
     });
 
     document.getElementById('joinBtn').addEventListener('click', () => {
-      const inputCode = DOM.roomInput.value.trim();
+      // تطبيع الكود: إزالة المسافات وتحويله لأحرف صغيرة، لأن معرّفات PeerJS حساسة لحالة الأحرف
+      // وبعض لوحات مفاتيح الجوال تُكبّر الحرف الأول تلقائيًا مما يسبب رسالة "الغرفة غير موجودة" خطأً
+      const inputCode = DOM.roomInput.value.trim().toLowerCase().replace(/\s+/g, '');
       if (!inputCode) {
         showToast("يرجى كتابة كود الغرفة أولاً!");
+        return;
+      }
+      if (!AppState.localStream) {
+        showToast("يرجى الانتظار حتى تجهيز الكاميرا والميكروفون...");
         return;
       }
 
       AppState.isHost = false;
       AppState.userName = DOM.lobbyUsername.value.trim() || 'مشارك';
       AppState.roomId = inputCode;
+      AppState.joinAttempts = 0;
 
+      setJoinButtonsBusy(true, "جاري الاتصال بالغرفة...");
       initPeerSession(null);
     });
 
+    function setJoinButtonsBusy(isBusy, label) {
+      const joinBtn = document.getElementById('joinBtn');
+      const createBtn = document.getElementById('createBtn');
+      joinBtn.disabled = isBusy;
+      createBtn.disabled = isBusy;
+      joinBtn.classList.toggle('opacity-60', isBusy);
+      createBtn.classList.toggle('opacity-60', isBusy);
+      if (isBusy && label) {
+        joinBtn.dataset.originalText = joinBtn.dataset.originalText || joinBtn.innerText;
+        joinBtn.innerText = label;
+      } else {
+        if (joinBtn.dataset.originalText) joinBtn.innerText = joinBtn.dataset.originalText;
+      }
+    }
+
     function initPeerSession(customId) {
+      // نغلق أي جلسة سابقة فاشلة قبل بدء واحدة جديدة لتفادي تعليق الحالة
+      if (AppState.peer && !AppState.peer.destroyed) {
+        try { AppState.peer.destroy(); } catch (e) {}
+      }
+
       AppState.peer = customId ? new Peer(customId) : new Peer();
+      const isJoiningFlow = !customId;
+      let joinConfirmed = false;
 
       AppState.peer.on('open', (id) => {
         AppState.userId = id;
 
-        if (!customId) {
-          // الاتصال بالمضيف
-          const conn = AppState.peer.connect(AppState.roomId);
+        if (isJoiningFlow) {
+          // الاتصال بالمضيف: ننتظر فتح قناة البيانات فعليًا قبل الدخول للاجتماع
+          const conn = AppState.peer.connect(AppState.roomId, { reliable: true });
           setupDataConnection(conn);
+
+          conn.on('open', () => {
+            joinConfirmed = true;
+            setJoinButtonsBusy(false);
+            enterMeetingRoomUI();
+          });
 
           const call = AppState.peer.call(AppState.roomId, AppState.localStream);
           setupMediaCall(call);
+        } else {
+          // المضيف يدخل فورًا لأن الغرفة هو من ينشئها
+          enterMeetingRoomUI();
         }
-
-        enterMeetingRoomUI();
       });
 
       AppState.peer.on('call', (call) => {
@@ -761,19 +836,38 @@
       // معالجة أخطاء الاتصال (غرفة غير موجودة، كود محجوز، مشاكل شبكة...)
       AppState.peer.on('error', (err) => {
         console.error('خطأ PeerJS:', err);
+
+        // "peer-unavailable" أحيانًا يحدث بسبب تأخر بسيط في تسجيل المضيف على خادم
+        // الوسيط (خصوصًا إذا انضم شخص فور مشاركة الكود)، لذا نعيد المحاولة تلقائيًا
+        // قبل الجزم بأن الغرفة غير موجودة فعلاً.
+        if (isJoiningFlow && !joinConfirmed && err.type === 'peer-unavailable') {
+          AppState.joinAttempts = (AppState.joinAttempts || 0) + 1;
+          if (AppState.joinAttempts <= 3) {
+            setJoinButtonsBusy(true, `جاري إعادة المحاولة (${AppState.joinAttempts}/3)...`);
+            setTimeout(() => {
+              if (!joinConfirmed) initPeerSession(null);
+            }, 1500);
+            return;
+          }
+        }
+
         let msg = "حدث خطأ في الاتصال، يرجى المحاولة مجددًا.";
         if (err.type === 'peer-unavailable') {
-          msg = "لا يمكن العثور على غرفة بهذا الكود، تأكد من الكود وحاول مرة أخرى.";
+          msg = "لا يمكن العثور على غرفة بهذا الكود. تأكد من نسخ الكود بالكامل وبدون مسافات، ومن أن صاحب الاجتماع ما زال داخل الغرفة.";
         } else if (err.type === 'unavailable-id') {
-          msg = "كود الغرفة مستخدم حاليًا، يرجى المحاولة مجددًا.";
+          msg = "حدث تعارض في إنشاء الغرفة، يرجى المحاولة مجددًا.";
         } else if (err.type === 'network' || err.type === 'server-error' || err.type === 'disconnected') {
           msg = "تعذّر الاتصال بالخادم، تحقق من اتصال الإنترنت.";
         }
         showToast(msg);
+        setJoinButtonsBusy(false);
 
-        // إن فشل الانضمام قبل الدخول للاجتماع، أعد المستخدم للوبي
-        if (DOM.meetingSection.classList.contains('hidden')) {
+        // إن فشل الانضمام قبل الدخول للاجتماع، أعد المستخدم للوبي وتخلّص من الجلسة الفاشلة
+        if (isJoiningFlow && !joinConfirmed) {
           AppState.roomId = null;
+          if (AppState.peer && !AppState.peer.destroyed) {
+            try { AppState.peer.destroy(); } catch (e) {}
+          }
         }
       });
     }
@@ -1218,10 +1312,24 @@
 
       document.getElementById('copyBtn').addEventListener('click', () => {
         if (!AppState.roomId) return;
-        navigator.clipboard.writeText(AppState.roomId)
-          .then(() => showToast("تم نسخ كود الغرفة!"))
-          .catch(() => showToast("تعذّر نسخ الكود، انسخه يدويًا: " + AppState.roomId));
+        const joinLink = buildJoinLink(AppState.roomId);
+        navigator.clipboard.writeText(joinLink)
+          .then(() => showToast("تم نسخ رابط الانضمام! أرسله للمشاركين بدل الكود لتفادي أخطاء الكتابة."))
+          .catch(() => showToast("تعذّر النسخ، الكود هو: " + AppState.roomId));
       });
+
+      const shareBtn = document.getElementById('shareBtn');
+      if (navigator.share) {
+        shareBtn.classList.remove('hidden');
+        shareBtn.addEventListener('click', () => {
+          if (!AppState.roomId) return;
+          navigator.share({
+            title: 'دعوة اجتماع Meet Ultra',
+            text: `انضم إلى اجتماعي على Meet Ultra`,
+            url: buildJoinLink(AppState.roomId)
+          }).catch(() => {});
+        });
+      }
 
       document.getElementById('scheduleMeetingBtn').addEventListener('click', () => {
         showToast("ميزة جدولة الاجتماعات المستقبلية قادمة قريبًا.");
